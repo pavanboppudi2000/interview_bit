@@ -1,0 +1,133 @@
+{% extends 'base.html' %} {% block title %}New interview{% endblock %} {% block
+css %}
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
+/>
+{% endblock %} {% block header %} {% endblock %} {% block content %}
+<form
+  action
+  onsubmit="submitData(); return false;"
+  id="update-form"
+  style="max-width: 40vw; margin: 0 auto;"
+>
+  <!-- Comma sep emails -->
+  <div class="field">
+    <label class="label">Emails</label>
+    <div class="control">
+      <input
+        class="input"
+        id="emails"
+        type="text"
+        placeholder="Comma seperated emails"
+        value="{{ ','.join(schedule.emails) }}"
+      />
+    </div>
+  </div>
+  <div class="field">
+    <label class="label">Start Time</label>
+    <div class="control">
+      <input
+        class="timepick input"
+        id="start"
+        value="{{ schedule.start_time }}"
+      />
+    </div>
+  </div>
+
+  <div class="field">
+    <label class="label">End Time</label>
+    <div class="control">
+      <input class="timepick input" id="end" value="{{ schedule.end_time }}" />
+    </div>
+  </div>
+  <div class="field is-grouped">
+    <div class="control">
+      <button class="button is-link" type="submit">Update</button>
+    </div>
+    <div class="control">
+      <button class="button is-link is-light" onclick="history.back(-1)">Cancel</button>
+    </div>
+  </div>
+</form>
+<div id="response"></div>
+
+{% endblock %} {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+  const initialValues = {
+    start_time: "{{ 3 }}",
+  };
+
+  flatpickr(".timepick", {
+    enableTime: true,
+    dateFormat: "Y-m-d H:i",
+  });
+  var submitData = function () {
+    var startTime = document.querySelector("#start").value;
+    var endTime = document.querySelector("#end").value;
+
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+
+    var valid_data = true;
+
+    if (end <= start) {
+      console.error("End is ");
+      valid_data = false;
+      showResponse("End time is less than start time");
+    }
+
+    var emails = document.querySelector("#emails").value;
+    const xemails = emails.split(",").map((x) => x.trim());
+    // validation 1
+    if (xemails.length < 2) {
+      console.log("show < 2 error msg");
+      valid_data = false;
+      showResponse("Number of participants should be more than 1");
+    }
+
+    if (valid_data)
+      fetch("", {
+        method: "PATCH",
+        body: JSON.stringify({ emails, startTime, endTime }),
+      })
+        .then((x) => x.json())
+        .then((x) => {
+          if (x["error"]) {
+            // any error
+            const div = document.querySelector("#response");
+
+            // if some emails are invalid we'll return a vaild list with booleand
+            if (x["valid"]) {
+              x["valid"].forEach((valid, i) => {
+                if (!valid) {
+                  const li = document.createElement("li");
+                  li.innerHTML = `paricipant <strong><b>${xemails[i]}</b></strong> doesn't exist`;
+                  div.appendChild(li);
+                }
+              });
+            } else {
+              console.error(x["error"]);
+              div.innerHTML = x["error"];
+              if (x["participants"]) {
+                div.innerHTML += " ";
+                div.innerHTML += x["participants"]
+                  .map((p) => `<strong><b>${p}</b></strong>`)
+                  .join(", ");
+              }
+            }
+          } else {
+            showResponse("Added meet successfully");
+          }
+        })
+        .catch((err) => showResponse(err));
+  };
+
+  const showResponse = (resp) => {
+    const div = document.querySelector("#response");
+    div.innerHTML = resp;
+  };
+</script>
+
+{% endblock %}

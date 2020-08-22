@@ -1,0 +1,59 @@
+{% extends 'base.html' %} {% block title %}Home{% endblock %} {% block header %}
+{% endblock %} {% block content %} {% for schedule in schedules %}
+
+<div class="card" id="sched-{{ schedule.id }}">
+  <header class="card-header">
+    <p class="card-header-title">
+      Meet with {% for email in schedule.emails %}
+      <strong>
+        , {{ email }}
+      </strong>
+      {% endfor %}
+    </p>
+    <a href="#" class="card-header-icon" aria-label="more options">
+      <span class="icon">
+        <i class="fas fa-angle-down" aria-hidden="true"></i>
+      </span>
+    </a>
+  </header>
+  <div class="card-content">
+    <div class="content">
+      Meet starts at
+      <time datetime="{{ schedule.start_time }}"
+        >{{ schedule.start_time }}</time
+      >
+      <br />
+      ends at
+      <time datetime="{{ schedule.end_time }}">{{ schedule.end_time }}</time>
+    </div>
+  </div>
+  <footer class="card-footer">
+    <a
+      href="{{ url_for('edit', interview_id = schedule.id) }}"
+      class="card-footer-item"
+      >Edit</a
+    >
+    <a
+      href="#"
+      onclick="deleteSchedule(`{{schedule.id}}`)"
+      class="card-footer-item"
+      >Delete</a
+    >
+  </footer>
+</div>
+{% endfor %} {% if schedules|length == 0 %}
+<h1>
+  No upcoming interviews
+</h1>
+{% endif %} {% endblock %} {% block scripts %}
+<script>
+  const deleteSchedule = (id) => {
+    fetch(`/delete/${id}`, { method: "DELETE" })
+      .then((x) => x.json())
+      .then((x) => {
+        document.querySelector(`#sched-${id}`).remove();
+      })
+      .catch((x) => console.error(x));
+  };
+</script>
+{% endblock %}

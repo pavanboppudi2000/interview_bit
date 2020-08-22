@@ -1,0 +1,13 @@
+amqp
+celery
+Flask
+Flask-Mail
+python-dotenv
+redis
+requests
+watchdog
+pylint
+autopep8
+Flask-SqlAlchemy
+PyYAML
+argh
